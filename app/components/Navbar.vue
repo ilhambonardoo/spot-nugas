@@ -7,14 +7,12 @@
         to="/"
         class="flex items-center gap-2 font-bold text-xl text-primary"
       >
-        <Icon name="ph:coffee-bold" class="w-7 h-7" />
         <span>Nugas <span class="text-foreground">Spot</span></span>
       </NuxtLink>
 
       <div class="flex-1 max-w-md hidden md:block">
         <div class="relative">
-          <Icon
-            name="ph:magnifying-glass"
+          <Search
             class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4"
           />
           <input
@@ -34,16 +32,17 @@
     </div>
 
     <div
-      class="flex justify-center items-center border-t py-2 px-4 relative gap-5"
+      class="flex justify-center items-center border-t py-2 px-4 relative gap-2"
     >
       <div class="flex items-center justify-center gap-2">
         <NuxtLink
           v-for="page in choosePages"
           :key="page.key"
           :to="page.path"
-          class="border py-1 px-4 rounded-3xl text-xs font-medium transition-colors hover:bg-muted"
-          active-class="bg-primary text-primary-foreground border-primary"
+          class="border py-1 px-4 rounded-3xl text-xs font-medium transition-all duration-200 ease-in-out hover:bg-muted flex items-center gap-2 hover:scale-105 active:scale-95 bg-background text-foreground"
+          active-class="!bg-neutral-500 !text-white !border-primary font-semibold shadow-sm"
         >
+          <component :is="page.icon" class="w-4 h-4" />
           <span>{{ page.label }}</span>
         </NuxtLink>
       </div>
@@ -54,10 +53,12 @@
           :aria-expanded="isDropdownOpen"
           aria-haspopup="menu"
           :class="[
-            'flex items-center gap-2 px-3.5 py-1 rounded-full border text-xs font-medium transition-colors cursor-pointer',
-            activeFilterCount > 0
-              ? 'bg-primary/10 text-primary border-primary'
-              : 'bg-background hover:bg-muted border-input',
+            'flex items-center gap-2 px-3.5 py-1 rounded-full border text-xs font-medium transition-all hover:scale-105 ease-in-out duration-300 cursor-pointer',
+            isFilteredDisable
+              ? 'opacity-50 bg-muted text-muted-foreground border-border cursor-none'
+              : activeFilterCount > 0
+                ? 'bg-neutral-500 text-white border-primary'
+                : 'bg-background hover:bg-muted border-input',
           ]"
         >
           <SlidersHorizontal class="w-3.5 h-3.5" />
@@ -69,12 +70,6 @@
           >
             {{ activeFilterCount }}
           </span>
-
-          <Icon
-            name="ph:caret-down-bold"
-            class="w-3 h-3 transition-transform"
-            :class="{ 'rotate-180': isDropdownOpen }"
-          />
         </button>
 
         <div
@@ -94,19 +89,21 @@
             :key="filter.key"
             @click="toggleFilter(filter.key)"
             :class="[
-              'w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-colors cursor-pointer text-left',
-              isActive(filter.key)
+              'w-full flex items-center justify-between px-2.5 py-2 rounded-lg  hover:scale-105 ease-in-out duration-200 text-xs transition-all cursor-pointer text-left',
+              isFilterActive(filter.key)
                 ? 'bg-primary/10 text-primary font-medium'
                 : 'hover:bg-muted text-foreground',
             ]"
           >
             <div class="flex items-center gap-2">
-              <Icon :name="filter.icon" class="w-4 h-4" />
               <component :is="filter.icon" />
               <span>{{ filter.label }}</span>
             </div>
 
-            <Check v-if="isActive(filter.key)" class="w-4 h-4 text-primary" />
+            <Check
+              v-if="isFilterActive(filter.key)"
+              class="w-4 h-4 text-primary"
+            />
           </button>
 
           <div v-if="activeFilterCount > 0" class="border-t mt-1 pt-1">
@@ -127,7 +124,10 @@
 import {
   Check,
   Clock,
+  Earth,
+  Info,
   Plug,
+  Search,
   SlidersHorizontal,
   Trees,
   Wifi,
@@ -148,17 +148,20 @@ const quickFilters = [
 ];
 
 const choosePages = [
-  { key: "1", label: "Dashboard", path: "/" },
-  { key: "2", label: "Tentang", path: "/tentang" },
+  { key: "1", label: "Ekslpor", path: "/", icon: Earth },
+  { key: "2", label: "Tentang", path: "/tentang", icon: Info },
 ];
 
-const isActive = (key) => route.query[key] === "true";
+const isFilterActive = (key) => route.query[key] === "true";
+
+const isFilteredDisable = computed(() => route.path === "/tentang");
 
 const activeFilterCount = computed(() => {
-  return quickFilters.filter((f) => isActive(f.key)).length;
+  return quickFilters.filter((f) => isFilterActive(f.key)).length;
 });
 
 const toggleDropdown = () => {
+  if (isFilteredDisable.value) return;
   isDropdownOpen.value = !isDropdownOpen.value;
 };
 
